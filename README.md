@@ -1,47 +1,30 @@
 # datasci-tsa-claims
-Analysis of TSA passenger claims
+Prediction of TSA (Transportation Security Administration) passenger claim outcomes.
 
-## Goal / Design:
-Predict whether a TSA claim will be approved, settled, or denied (i.e. full / partial / no payment). With
+## Summary
+This is my classification project for Metis (a data science bootcamp). It includes data cleaning and exploration of [200k TSA passenger claims from 2002-2015](https://www.dhs.gov/tsa-claims-data), and a pipeline for model & feature validation.
+
+The goal is to predict whether a TSA claim will be approved, settled, or denied (i.e. full / partial / no payment). With
 an accurate predictor, there would be a few uses:
-* Passenger / insurance – Predict if a claim will be approved.
-* TSA – Partially automate handling of claims, infer areas that can be targeted to avoid cost (or
-prevent passenger dissatisfaction)
-I used accuracy to test the model since the target was pretty well balanced and accuracy should provide
-a good model for a general use case. However, it would have been best to pick one of these goals and
-do more nuanced evaluation (e.g. maximize precision / recall / f1 for one of the classes)
+* Passenger / insurance – Predict if a claim will be approved (is it worth submitting given filing costs?)
+* TSA – Automate initial triage of claims, infer areas that can be targeted to avoid cost (or prevent passenger dissatisfaction)
 
-## Data:
-Kaggle dataset ~200k rows & 13 columns. Data was messy with missing values, and inconsistent use
-of category labels in different years (e.g. “approval” vs “approved” vs “approve in full”).
-I would have liked to add passenger volume data but wasn’t able to find useful numbers (split by
-airport, airline, etc.)
+Some concepts I explored were class imbalance, picking useful performance metrics, and methods for representing categorical variables.
 
-## Model:
-EDA / Cleaning
-* Removed rows with >5 null values since they are missing too much information
-* Removed nulls for target & numerical columns (claim value, dates)
-* Set categorical nulls to blanks
-Feature engineering
-* Date features:
-  * Delay – [Report Date – Incident Date]
-  * Seasonality – Month, Day of month, Day of year
-  * Excluded year since new claims will be out of sample for the tree based methods
-* Categorical features:
-  * Tried dummy variable, frequency rank, and frequency count encoding
-  * Frequency count made the most intuitive sense, as it ends up grouping together smaller
-categories (e.g. airlines with 5 claims will end up with the same “category” encoding)
-Selection / Validation
-* Feature selection with baseline + various feature combinations
-  * Random forest with default parameters, 5-fold CV on 80% validation set
-* Also tried logistic regression, but adding / removing features had very little impact;
-probably due to non-linear relationships / feature interaction
-  * Frequency count did best overall (better than dummy encoding, slightly better than rank)
-  * Using all features was best and likely have room to improve with additional features
-* Model selection with Date + Categorical variables
-  * Models: Gaussian NB, Logistic Regression, Random Forest, XGBoost
-  * Also attempted SVM, but training took too longTesting / Results
-* XGBoost was the best model overall
-* Slight improvement after grid search via Amazon AWS
-* Identified important features for inference using feature importance (by gain)
-  * Created tableau charts for class distributions of important features
+## Files:
+#### Code
+* **TSA_Data_Cleaning.ipynb** - EDA of raw features, cleaning (e.g., merging inconsistent categories, removing nulls)
+  * tsa_claims.csv.zip - Raw data archive from Kaggle (compiled from dhs.gov/tsa-claims-data)
+  * tsa_claims_clean.csv - Cleaned data file
+* **TSA_Feature_Model.ipynb** - Feature engineering, feature selection (using random forest baseline), model selection, model tuning
+
+#### Docs
+* **TSA_Claims_Slides.pdf** - Project presentation slides
+* **TSA_Claims_Writeup.pdf** - Outline of project process
+
+## Results
+I used accuracy to test the model since the target was fairly balanced across classes (47/31/22%) and accuracy should be a good metric for a general predictive model case. However, it would be interesting to pick a metric for a specific use case (e.g. maximize precision for TSA traige or recall for helping customers decide whether to file a claim).
+
+The best model was XGBoost, which had 57.6% accuracy after hyperparameter tuning.
+
+The most important features (by information gain) were claim value, claim site (e.g. vehicle, checkpoint, security), and claim type (e.g. damage, loss, injury). See presentation slides for some exploration of those features.
